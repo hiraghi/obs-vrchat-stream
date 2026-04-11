@@ -36,6 +36,14 @@ claude "obs-vrchat-stream をセットアップして"
 codex --instructions AGENTS.md "このプロジェクトをセットアップして"
 ```
 
+**GitHub Copilot (VS Code) の場合：**
+
+このリポジトリをクローンして VS Code で開くと、`AGENTS.md` が自動的にエージェントのコンテキストに読み込まれます。Copilot Chat を **Agent モード**（`@workspace`）に切り替えて、以下のように入力してください。
+
+```
+obs-vrchat-stream をセットアップして
+```
+
 エージェントが自動で実行します：
 
 1. Tailscale のインストール確認（必要なら `winget` でインストール）
