@@ -3,7 +3,7 @@
 > OBS の映像を VRChat ワールドの動画プレイヤーにリアルタイム配信する — **外部サーバー不要**
 
 ![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
+![License](https://img.shields.io/badge/license-CC0%201.0-green)
 
 ```
 OBS ──RTMP──▶ MediaMTX ──HLS──▶ Tailscale Funnel ──HTTPS──▶ VRChat
@@ -138,4 +138,4 @@ OBS のキーフレーム間隔が **1 秒** になっているか確認して�
 
 ## License
 
-MIT
+[CC0 1.0 Universal](LICENSE) — パブリックドメイン。帰属表示なしで自由に使用・改変・再配布できます。
