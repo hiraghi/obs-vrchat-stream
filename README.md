@@ -32,16 +32,11 @@ OBS ──RTMP──▶ MediaMTX ──HLS──▶ Tailscale Funnel ──HTTPS
 # Claude Code
 claude "obs-vrchat-stream をセットアップして"
 
+# GitHub Copilot CLI
+gh copilot suggest -t shell "obs-vrchat-stream をセットアップして。手順は AGENTS.md を参照"
+
 # OpenAI Codex CLI
 codex --instructions AGENTS.md "このプロジェクトをセットアップして"
-```
-
-**GitHub Copilot (VS Code) の場合：**
-
-このリポジトリをクローンして VS Code で開くと、`AGENTS.md` が自動的にエージェントのコンテキストに読み込まれます。Copilot Chat を **Agent モード**（`@workspace`）に切り替えて、以下のように入力してください。
-
-```
-obs-vrchat-stream をセットアップして
 ```
 
 エージェントが自動で実行します：
