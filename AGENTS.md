@@ -7,6 +7,7 @@ AIエージェントが obs-vrchat-stream のセットアップを自動実行�
 
 - **Claude Code**: プロジェクトルートに置けば自動読み込み。サブディレクトリの場合は `@obs-vrchat-stream/AGENTS.md` で参照
 - **GitHub Copilot**: `.github/copilot-instructions.md` にこのファイルの内容を埋め込むか参照を記述する
+- **GitHub Copilot CLI**: `gh copilot suggest -t shell` でシェルコマンドを提案させる際にこのファイルの内容をプロンプトに含める
 - **OpenAI Codex CLI**: `codex --instructions obs-vrchat-stream/AGENTS.md` で渡す
 
 ---
@@ -24,24 +25,26 @@ OBS の映像を VRChat ワールドの動画プレイヤーでリアルタイ�
 
 ```
 obs-vrchat-stream/
-  setup.ps1           # MediaMTX 自動DL・yml設定生成（初回のみ実行）
+  AGENTS.md           # このファイル（AIエージェント向け手順書）
+  user-guide.md       # ユーザー向け解説・手順書（Zenn公開用）
+  README.md           # GitHub トップページ
+  setup.ps1           # MediaMTX 自動DL・yml設定生成・Tailscaleインストール案内（初回のみ実行）
   setup-once.cmd      # setup.ps1 のダブルクリック用ラッパー
   start-stream.ps1    # 配信開始（MediaMTX起動 + Tailscale Funnel有効化）
   start-server.cmd    # start-stream.ps1 のラッパー（pause付き）
   stop-stream.ps1     # 配信停止（Funnel停止 + MediaMTX停止）
   stop-server.cmd     # stop-stream.ps1 のラッパー
+  .mediamtx.pid       # start-stream.ps1 が書き込む MediaMTX の PID（stop-stream.ps1 が参照）
   bin/
     mediamtx.exe      # setup.ps1 が GitHub Releases からDL配置（setup前は存在しない）
     mediamtx.yml      # setup.ps1 が生成（setup前は存在しない）
-  docs/
-    user-guide.md     # ユーザー向け解説・手順書
 ```
 
 ---
 
 ## セットアップ手順
 
-### Step 1: MediaMTX のセットアップ
+### Step 1: MediaMTX のセットアップ・Tailscale インストール確認
 
 `obs-vrchat-stream/` ディレクトリで実行する：
 
@@ -82,33 +85,28 @@ paths:
     source: publisher
 ```
 
-### Step 2: Tailscale の確認・インストール
-
-インストール済み確認：
-
-```powershell
-$installed = ($null -ne (Get-Command tailscale -ErrorAction SilentlyContinue)) -or
-             (Test-Path "C:\Program Files\Tailscale\tailscale.exe")
-Write-Host "Tailscale installed: $installed"
-```
-
-`False` の場合はインストール：
+- 完了時に Tailscale の有無を確認し、未インストールなら以下のインストールコマンドを案内する:
 
 ```powershell
 winget install --id Tailscale.Tailscale -e --accept-package-agreements --accept-source-agreements
 ```
 
-### Step 3: Tailscale ログイン確認（⚠️ ユーザー操作が必要）
+setup.ps1 の出力に `Tailscale CLI not detected` が含まれていた場合は、上記コマンドでインストールしてから次の Step へ進む。
+
+### Step 2: Tailscale ログイン確認（⚠️ ユーザー操作が必要）
 
 **この手順はブラウザ認証が必要なため、ユーザーに操作を依頼する。**
 
 ログイン状態の確認（エージェントが実行）：
 
 ```powershell
-& "C:\Program Files\Tailscale\tailscale.exe" status
+# PATH にある場合はそちらを優先し、なければ固定パスにフォールバック
+$tsExe = (Get-Command tailscale -ErrorAction SilentlyContinue)?.Source
+if (-not $tsExe) { $tsExe = "C:\Program Files\Tailscale\tailscale.exe" }
+& $tsExe ip -4
 ```
 
-`Logged out` / `NoState` / エラーが出た場合は、ユーザーに以下を依頼する：
+IP アドレスが返れば準備完了。空・エラーの場合は、ユーザーに以下を依頼する：
 
 > **ユーザーへ:** Tailscale にログインしてください。以下のいずれかを実行してブラウザでログインしてください。
 > ```powershell
@@ -122,7 +120,7 @@ winget install --id Tailscale.Tailscale -e --accept-package-agreements --accept-
 & "C:\Program Files\Tailscale\tailscale.exe" ip -4
 ```
 
-### Step 4: 配信サーバーの起動
+### Step 3: 配信サーバーの起動
 
 ```powershell
 cd obs-vrchat-stream
@@ -143,7 +141,7 @@ OBS keyframe interval: 1 second
 
 **`VRChat URL` をユーザーに伝え、VRChat ワールドの動画プレイヤーへ入力するよう案内する。**
 
-### Step 5: OBS 設定値をユーザーに案内する
+### Step 4: OBS 設定値をユーザーに案内する
 
 エージェントは OBS を直接操作できないため、以下の設定値をユーザーへ伝える：
 
@@ -163,6 +161,11 @@ OBS keyframe interval: 1 second
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File stop-stream.ps1
 ```
+
+**stop-stream.ps1 の動作内容:**
+1. `tailscale funnel reset` で Funnel を無効化（外部からのアクセスを遮断）
+2. `.mediamtx.pid` に記録された PID を読み取り、MediaMTX プロセスを停止
+3. `.mediamtx.pid` を削除
 
 MediaMTX バイナリ削除（再セットアップが必要になる）：
 
